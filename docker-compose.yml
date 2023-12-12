@@ -1,0 +1,68 @@
+services:
+  wally-backend:
+    container_name: wally-app
+    image: nest-api
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - 5000:5000
+    env_file:
+      - .env
+    networks:
+      - backend_network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    
+  redis:
+    container_name: redis-db
+    image: redis
+    env_file:
+      - .env
+    ports:
+      - 6379:6379
+    networks:
+      - backend_network
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  mysql:
+    container_name: mysql-db
+    image: mysql:latest
+    ports:
+      - 3306:3306
+    env_file:
+      - .env
+    networks:
+      - backend_network
+    restart: unless-stopped
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend_network
+    ports:
+      - '5050:80'
+    depends_on:
+      - mysql
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  mysql_data: {}
+  redis:
+    driver: local
